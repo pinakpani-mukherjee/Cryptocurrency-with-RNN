@@ -17,7 +17,7 @@ import time
 # #preprocessing data
 # =============================================================================
 
-
+#define values
 SEQ_LEN = 60
 FUTURE_PERIOD_PREDICT = 3
 RATIO_TO_PREDICT = 'LTC-USD'
