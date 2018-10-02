@@ -1,9 +1,12 @@
+# preprocessing my data
+
+###################################################################################################################
 import pandas as pd
-import os
 from sklearn import preprocessing
 from collections import deque
 import random
 import numpy as np
+import time
 # =============================================================================
 # df1 = pd.read_csv("crypto_data/LTC-USD.csv",names =
 #                  ["time","low","high","open","close","volume"])
@@ -18,6 +21,9 @@ import numpy as np
 SEQ_LEN = 60
 FUTURE_PERIOD_PREDICT = 3
 RATIO_TO_PREDICT = 'LTC-USD'
+EPOCHS = 10
+BATCH_SIZE = 64
+NAME = f"{SEQ_LEN}-SEQ-{FUTURE_PERIOD_PREDICT}-PRED-{int(time.time())}"
 
 #setting up tagets
 def classify(current,future):
@@ -129,5 +135,80 @@ val_x, val_y = preprocess_df(validation_main_df)
 print(f"train data: {len(train_x)} validation: {len(val_x)}")
 print(f"Dont buys: {train_y.count(0)}, buys: {train_y.count(1)}")
 print(f"VALIDATION Dont buys: {val_y.count(0)}, buys: {val_y.count(1)}")
+
+###################################################################################################################
+
+
+#setting up my layer and dropouts
+import tensorflow as tf
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense, Dropout, LSTM, BatchNormalization
+from tensorflow.keras.callbacks import TensorBoard
+from tensorflow.keras.callbacks import ModelCheckpoint    
+
+model = Sequential()
+
+model.add(LSTM(128,input_shape =(train_x.shape[1:]),return_sequences=True,activation="tanh"))
+model.add(Dropout(0.2))
+model.add(BatchNormalization())
+
+model.add(LSTM(128,input_shape =(train_x.shape[1:]),return_sequences=True,activation="tanh"))
+model.add(Dropout(0.1))
+model.add(BatchNormalization())
+
+model.add(LSTM(128,input_shape =(train_x.shape[1:],),activation="tanh"))
+model.add(Dropout(0.2))
+model.add(BatchNormalization())
+
+model.add(Dense(32, activation="relu"))
+model.add(Dropout(0.2))
+
+model.add(Dense(2, activation='softmax'))
+
+opt = tf.keras.optimizers.Adam(lr = 1e-3, decay= 1e-6)
+
+model.compile(loss = 'sparse_categorical_crossentropy',
+              optimizer=opt,
+              metrics=["accuracy"])
+
+tensorboard = TensorBoard(log_dir=f"logs/{NAME}")
+
+filepath = "RNN_Final-{epoch:02d}-{val_acc:.3f}" 
+checkpoint = ModelCheckpoint("models/{}.model".format(filepath, monitor='val_acc', 
+                             verbose=1, save_best_only=True, mode='max')) 
+
+history = model.fit(train_x,train_y, batch_size=BATCH_SIZE,epochs=EPOCHS, validation_data=(val_x,val_y),
+                    callbacks=[tensorboard,checkpoint])
+
+model.save("{}.model".format(NAME))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
