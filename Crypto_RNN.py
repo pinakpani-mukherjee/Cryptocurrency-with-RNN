@@ -48,6 +48,37 @@ def preprocess_df(df):
     random.shuffle(sequential_data)  
     
     
+    buys = []
+    sells = []
+    
+    for seq, target in sequential_data:
+        if target == 0:
+            sells.append([seq,target])
+        elif target == 1:
+            buys.append([seq,target])
+            
+            
+    random.shuffle(buys)
+    random.shuffle(sells)
+    
+    lower = min(len(buys),len(sells))
+    
+    buys = buys[:lower]
+    sells = sells[:lower]
+    
+    
+    sequential_data = buys+sells
+    random.shuffle(sequential_data)
+    
+    X = []
+    y = []
+    
+    for seq,target in sequential_data:
+        X.append(seq)
+        y.append(target)
+        
+    return np.array(X), y
+
 
 main_df = pd.DataFrame() 
 
@@ -90,9 +121,13 @@ preprocess_df(main_df)
 
 
 
-#train_x, train_y = preprocess(main_df)
+train_x, train_y = preprocess_df(main_df)
 
-#val_x, val_y = preprocess(validation_main_df)
+val_x, val_y = preprocess_df(validation_main_df)
 
+
+print(f"train data: {len(train_x)} validation: {len(val_x)}")
+print(f"Dont buys: {train_y.count(0)}, buys: {train_y.count(1)}")
+print(f"VALIDATION Dont buys: {val_y.count(0)}, buys: {val_y.count(1)}")
 
 
